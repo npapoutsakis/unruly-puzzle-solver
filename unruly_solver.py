@@ -2,149 +2,48 @@
 #           Nikolaos Papoutsakis
 #               2019030206
 
-# 1. Unruly game solver using A* Search Algorithm & Heuristic
-
-import heapq
+# 1. Unruly game solver using Backtracking Algorithm
 import time
 
-# Check if the board is valid after placing a color at a specific position
-def is_valid(board, row, col, color):
-    n = len(board)
-    board[row][col] = color
-    # Check row constraints
-    row_str = ''.join(board[row])
-    col_str = ''.join([board[r][col] for r in range(n)])
-    
-    if 'BBB' in row_str or 'WWW' in row_str:
-        board[row][col] = '.'
-        return False
-    if 'BBB' in col_str or 'WWW' in col_str:
-        board[row][col] = '.'
-        return False
-    
-    # Count number of 'B' and 'W' in row/column
-    if row_str.count('B') > n // 2 or row_str.count('W') > n // 2:
-        board[row][col] = '.'
-        return False
-    if col_str.count('B') > n // 2 or col_str.count('W') > n // 2:
-        board[row][col] = '.'
-        return False
-    
-    board[row][col] = '.'
-    return True
-
-def heuristic(board):
-    imbalance = 0
-    triplets = 0
-    empty_cells = 0
-
-    for row in board:
-        imbalance += abs(row.count('B') - row.count('W'))  # Difference between B and W
-        empty_cells += row.count('.')  # Count empty cells in the row
-
-        # Count triplets directly in the loop without a helper function
-        for i in range(len(row) - 2):
-            if row[i] == row[i+1] and row[i+1] != '.' and row[i+2] == '.':
-                triplets += 1
-
-    # Check each column for imbalance, triplets, and empty cells (without zip)
-    n = len(board)
-    for col in range(n):
-        col_values = [board[row][col] for row in range(n)]  # Extract column manually
-        imbalance += abs(col_values.count('B') - col_values.count('W'))
-        
-        for i in range(len(col_values) - 2):
-            if col_values[i] == col_values[i+1] and col_values[i+1] != '.' and col_values[i+2] == '.':
-                triplets += 1
-
-    # Return total imbalance, triplets, and empty cells as heuristic value
-    return imbalance + triplets + empty_cells
-
-
-# https://www.geeksforgeeks.org/a-search-algorithm/
-# A* Search Algorithm
-def a_star(board, max_nodes, cutoff=100):
-    n = len(board)
-    open_list = []
-    heapq.heappush(open_list, (0, board, 0))  # (f, board, g)
-    nodes_expanded = 0
-
-    while open_list and nodes_expanded < max_nodes:
-        f, current_board, g = heapq.heappop(open_list)
-        nodes_expanded += 1
-
-        print(f"Nodes Expanded: {nodes_expanded}")
-        printBoard(current_board)
-        # Check if the solution is complete
-        if isSolution(current_board):
-            print("SOLVED!")
-            print(f"Nodes Expanded: {nodes_expanded}")
-            return current_board
-        
-        # Stop expanding if cutoff is reached
-        if f > cutoff:
-            continue
-
-        # Expand neighbors for empty cells
-        for row in range(n):
-            for col in range(n):
-                if current_board[row][col] == '.':
-                    for color in ['B', 'W']:
-                        new_board = [r[:] for r in current_board]
-                        if is_valid(new_board, row, col, color):
-                            new_board[row][col] = color
-                            f_new = g + heuristic(new_board)
-                            
-                            # Prune branches exceeding cutoff
-                            if f_new < cutoff:
-                                heapq.heappush(open_list, (f_new, new_board, g + 1))
- 
-                    break
-
-    print("Max node expansion limit reached.")
-    return None
-
-# Check if the board has a correct solution
-def isSolution(board):
-    # Check each row to see if it has the correct number of 'B' and 'W'
-    for row in range(len(board)):
-        blacks = board[row].count('B')
-        whites = board[row].count('W')
-        
-        if blacks != len(board) / 2 or whites != len(board) / 2:
-            return False
-    return True
-
+# Print the board
 def printBoard(board):
     for row in board:
         print(' '.join(row))
-    return
-
+        
 # Reading input file & decode the initial board
 def makeInitialBoard(file):
     with open(file, 'r') as f:
         line = f.readline().strip()
 
         # Decode line
-        board_size, initial_state = line.split(":")
+        board_size = line.split(":")[0]
+        initial_state = line.split(":")[1]
         
+        # get the rows and cols of each board
         rows, cols = map(int, board_size.split('x'))
 
-        board = [["." for _ in range(cols)] for _ in range(rows)]
+        # fill the board with the initial state given in the file
+        board = []
+        for _ in range(rows):
+            row = []
+            for _ in range(cols):
+                row.append(".")
+            board.append(row)
+
 
     current_position = 0
-
     for char in initial_state:
         # Calculate number of steps from character
         # ord() returns the ASCII value of a character
         steps = ord(char.lower()) - ord('a') + 1
 
-        # Update current position on board by steps taken from character value
+        # each step is a box on the board, just add the steps i ve done
         current_position += steps
 
-        # Place a tile if within board limits - 8x8 = 64.
+        # check limits - 8x8 = 64.
         if current_position <= rows * cols:
             # Calculate row and column of current position
+            # start from current_position - 1
             row = (current_position - 1) // cols
             col = (current_position - 1) % cols
 
@@ -155,6 +54,53 @@ def makeInitialBoard(file):
                 board[row][col] = 'B'
 
     return board
+
+# Check if the board is correctly filled
+def is_valid(board):
+    rows = len(board) 
+    cols = len(board[0])
+    
+    # ROWS
+    for row in range(rows):
+        current_line = board[row]
+        
+        # count the W & B so that they are the same on each row
+        blacks = current_line.count('B')
+        whites = current_line.count('W')
+        
+        # CHECKING BALANCE
+        # if one of them is greater than the half size of the row return false -> not equal
+        if blacks > len(current_line)/2 or whites > len(current_line)/2:
+            return False
+        
+        # CHECKING TRIPLE PLACEMENTS
+        # for each place in the row, check if there are 3 consecutive colors
+        for i in range(len(current_line) - 2):
+            if current_line[i] == current_line[i + 1] == current_line[i + 2] and current_line[i] != '.':
+                return False
+    
+    # COLS
+    for col in range(cols):
+        current_column = [board[r][col] for r in range(rows)]
+        
+        # count the W & B so that they are the same on each row
+        blacks = current_line.count('B')
+        whites = current_line.count('W')
+        
+        # CHECKING BALANCE
+        # if one of them is greater than the half size of the row return false -> not equal
+        if blacks > len(current_column)/2 or whites > len(current_column)/2:
+            return False
+        
+        # CHECKING TRIPLE PLACEMENTS
+        # for each place in the row, check if there are 3 consecutive colors
+        for i in range(len(current_line) - 2):
+            if current_line[i] == current_line[i + 1] == current_line[i + 2] and current_line[i] != '.':
+                return False
+    
+    # else return true
+    return True
+
 
 # encode the solution
 def encodeSolution(solution):
@@ -181,25 +127,56 @@ def encodeSolution(solution):
     
     return
 
-# Main
-def main():
-    input_file = "board.txt"
-    # input_file = input("Enter the input file name: ")
-    max_nodes = int(input("Enter the maximum number of nodes to expand: "))
+def backtracking_search(board, row, col, expanded_nodes, max_expansions):
+    # Stop if node expansion limit is reached
+    if expanded_nodes >= max_expansions:
+        return False, expanded_nodes  # Return both result and count
     
-    board = makeInitialBoard(input_file)
+    expanded_nodes += 1  # Increment node expansion count
+    
+    # If we reach the end of the board, the solution is found
+    if row == len(board):
+        return True, expanded_nodes
+    
+    # Calculate the next cell position
+    next_row, next_col = (row, col + 1) if col + 1 < len(board[0]) else (row + 1, 0)
+
+    # Skip filled cells
+    if board[row][col] != '.':
+        return backtrack(board, next_row, next_col, expanded_nodes, max_expansions)
+
+    # Try placing 'B' or 'W' and check validity
+    for color in 'BW':
+        board[row][col] = color
+        if is_valid(board):
+            result, expanded_nodes = backtracking_search(board, next_row, next_col, expanded_nodes, max_expansions)
+            if result:
+                return True, expanded_nodes
+        board[row][col] = '.'  # Undo the move
+
+    return False, expanded_nodes
+
+
+def main():
+    board = makeInitialBoard("board.txt")
+    print("Initial Board:")
     printBoard(board)
 
+    max_expansions = int(input("Max nodes to expand: "))
+    expanded_nodes = 0
+    
     start_time = time.time()
-    solution = a_star(board, max_nodes)
-    end_time = time.time()
+    solution_found, expanded_nodes = backtracking_search(board, 0, 0, expanded_nodes, max_expansions)
 
-    if solution is not None:
-        print(f"Time Taken: {end_time - start_time} seconds")
-        encodeSolution(solution)
+    if solution_found:
+        print("Solution Found:")
+        printBoard(board)
+        encodeSolution(board)
     else:
-        print("No Solution Found")
+        print("No solution found.")
 
+    print(f"Execution time: {time.time() - start_time:.3f} seconds")
+    print(f"Nodes expanded: {expanded_nodes}")
 
 
 if __name__ == "__main__":
