@@ -60,51 +60,33 @@ def makeInitialBoard(file):
     return board
 
 # Check if the board is correctly filled
-def is_valid(board):
-    rows = len(board) 
+def is_ok(board):
+    for row in board:
+        # check each 
+        if not correct(row):
+            return False
+    
     cols = len(board[0])
+    rows = len(board)
     
-    # ROWS
-    for row in range(rows):
-        current_line = board[row]
-        
-        # count the W & B so that they are the same on each row
-        blacks = current_line.count('B')
-        whites = current_line.count('W')
-        
-        # CHECKING BALANCE
-        # if one of them is greater than the half size of the row return false -> not equal
-        if blacks > len(current_line)/2 or whites > len(current_line)/2:
+    for c in range(cols):
+        col = [board[r][c] for r in range(rows)]
+        if not correct(col):
             return False
-        
-        # CHECKING TRIPLE PLACEMENTS
-        # for each place in the row, check if there are 3 consecutive colors
-        for i in range(len(current_line) - 2):
-            if current_line[i] == current_line[i + 1] == current_line[i + 2] and current_line[i] != '.':
-                return False
     
-    # COLS
-    for col in range(cols):
-        current_column = [board[r][col] for r in range(rows)]
-        
-        # count the W & B so that they are the same on each row
-        blacks = current_line.count('B')
-        whites = current_line.count('W')
-        
-        # CHECKING BALANCE
-        # if one of them is greater than the half size of the row return false -> not equal
-        if blacks > len(current_column)/2 or whites > len(current_column)/2:
-            return False
-        
-        # CHECKING TRIPLE PLACEMENTS
-        # for each place in the row, check if there are 3 consecutive colors
-        for i in range(len(current_line) - 2):
-            if current_line[i] == current_line[i + 1] == current_line[i + 2] and current_line[i] != '.':
-                return False
-    
-    # else return true
     return True
 
+# Check if a line is correct
+def correct(line):
+    # count blacks and whites to see the balance
+    if line.count('B') > len(line) // 2 or line.count('W') > len(line) // 2:
+        return False
+    
+    # for each place in the line(row or col), check if there are 3 consecutive colors
+    for i in range(len(line) - 2):
+        if line[i] == line[i + 1] == line[i + 2] and line[i] != '.':
+            return False
+    return True
 
 # encode the solution
 def encodeSolution(solution):
@@ -126,6 +108,7 @@ def encodeSolution(solution):
     # create output string
     output = f"{rows}x{cols}:{encoded_solution}"
 
+    # write to file
     with open("output.txt", "w") as file:
         file.write(output)
     
@@ -158,7 +141,7 @@ def backtracking_search(board, row, col, expanded_nodes, max_expansions):
         board[row][col] = placement
         
         # if its validn then call again to the next position
-        if is_valid(board):
+        if is_ok(board):
             result, expanded_nodes = backtracking_search(board, next_row, next_col, expanded_nodes, max_expansions)
             if result:
                 return True, expanded_nodes
