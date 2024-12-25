@@ -9,6 +9,7 @@ import time
 def printBoard(board):
     for row in board:
         print(' '.join(row))
+    print()
         
 # Reading input file & decode the initial board
 def makeInitialBoard(file):
@@ -22,6 +23,9 @@ def makeInitialBoard(file):
         # get the rows and cols of each board
         rows, cols = map(int, board_size.split('x'))
 
+        if rows < 6 or cols < 6 or rows % 2 != 0 or cols % 2 != 0:
+            exit("ERROR: n>=6, m>=6 and n,m even numbers")
+        
         # fill the board with the initial state given in the file
         board = []
         for _ in range(rows):
@@ -127,48 +131,57 @@ def encodeSolution(solution):
     
     return
 
+# https://www.geeksforgeeks.org/backtracking-algorithm-in-python/
+# Backtracking Algorithm
 def backtracking_search(board, row, col, expanded_nodes, max_expansions):
-    # Stop if node expansion limit is reached
+    # at first stop and return false if the expanded nodes are greater the limit given
     if expanded_nodes >= max_expansions:
-        return False, expanded_nodes  # Return both result and count
+        return False, expanded_nodes
     
-    expanded_nodes += 1  # Increment node expansion count
+    # increase the nodes on each call
+    expanded_nodes += 1
     
     # If we reach the end of the board, the solution is found
     if row == len(board):
         return True, expanded_nodes
     
-    # Calculate the next cell position
-    next_row, next_col = (row, col + 1) if col + 1 < len(board[0]) else (row + 1, 0)
+    # get the next row and col
+    next_row = row + (col + 1) // len(board[0])
+    next_col = (col + 1) % len(board[0])
 
-    # Skip filled cells
+    # skiping and call if a letter is already there
     if board[row][col] != '.':
-        return backtrack(board, next_row, next_col, expanded_nodes, max_expansions)
+        return backtracking_search(board, next_row, next_col, expanded_nodes, max_expansions)
 
-    # Try placing 'B' or 'W' and check validity
-    for color in 'BW':
-        board[row][col] = color
+    for placement in 'BW':
+        # place the color to that position
+        board[row][col] = placement
+        
+        # if its validn then call again to the next position
         if is_valid(board):
             result, expanded_nodes = backtracking_search(board, next_row, next_col, expanded_nodes, max_expansions)
             if result:
                 return True, expanded_nodes
-        board[row][col] = '.'  # Undo the move
+        # else just leave it empty
+        board[row][col] = '.'
 
     return False, expanded_nodes
 
 
+# main()
 def main():
-    board = makeInitialBoard("board.txt")
+    input_file = input("Give me the input file: ")
+    node_expansion = int(input("Max nodes to expand: "))
+
+    board = makeInitialBoard(input_file)
+    
     print("Initial Board:")
     printBoard(board)
-
-    max_expansions = int(input("Max nodes to expand: "))
-    expanded_nodes = 0
     
     start_time = time.time()
-    solution_found, expanded_nodes = backtracking_search(board, 0, 0, expanded_nodes, max_expansions)
+    solution, total_nodes = backtracking_search(board, 0, 0, 0, node_expansion)
 
-    if solution_found:
+    if solution:
         print("Solution Found:")
         printBoard(board)
         encodeSolution(board)
@@ -176,7 +189,7 @@ def main():
         print("No solution found.")
 
     print(f"Execution time: {time.time() - start_time:.3f} seconds")
-    print(f"Nodes expanded: {expanded_nodes}")
+    print(f"Nodes expanded: {total_nodes}")
 
 
 if __name__ == "__main__":
