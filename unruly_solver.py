@@ -2,14 +2,16 @@
 #           Nikolaos Papoutsakis
 #               2019030206
 
-# 1. Unruly game solver using Backtracking Algorithm
+# 4. Unruly game solver (csp) using Backtracking Search Algorithm
 import time
 
 # Print the board
 def printBoard(board):
     for row in board:
         print(' '.join(row))
+    
     print()
+    return
         
 # Reading input file & decode the initial board
 def makeInitialBoard(file):
@@ -86,6 +88,7 @@ def correct(line):
     for i in range(len(line) - 2):
         if line[i] == line[i + 1] == line[i + 2] and line[i] != '.':
             return False
+    
     return True
 
 # encode the solution
@@ -173,6 +176,8 @@ def main():
 
     print(f"Execution time: {time.time() - start_time:.3f} seconds")
     print(f"Nodes expanded: {total_nodes}")
+
+    return
 
 
 if __name__ == "__main__":
