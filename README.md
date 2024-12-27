@@ -1,8 +1,7 @@
 # Unruly Game Solver
 
-### AI Course - Prof. Lagoudakis - 2024
-
-**Author:** Nikolaos Papoutsakis**Student ID:** 2019030206
+**Author:** Nikolaos Papoutsakis\
+**Student ID:** 2019030206
 
 ## Project Description
 
@@ -84,13 +83,6 @@ W B B W B B W W
 Execution time: 0.002 seconds
 Nodes expanded: 161
 ```
-
----
-
-## Requirements
-
-- Python 3.x
-
 ---
 
 ## Notes
@@ -100,4 +92,4 @@ Nodes expanded: 161
 
 ---
 
-**Enjoy solving Unruly puzzles with AI!**
+**Enjoy!**
