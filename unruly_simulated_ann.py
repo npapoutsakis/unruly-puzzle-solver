@@ -121,7 +121,8 @@ def get_neighbors(board, pre_colored):
     m = len(board[0])
     neighbors = []
     
-    for _ in range(5): 
+    # all the possible neighbors
+    for _ in range(10): 
         new_grid = [row[:] for row in board]
 
         # choose a random neigbor
@@ -166,6 +167,63 @@ def simulated_annealing(board, pre_colored, schedule=exp_schedule()):
     return best_state, best_f_s, t
 
 
+# Stats & Performance
+def do_test(iterations, board, pre_colored, schedule=exp_schedule()):
+    max_steps_list = [500, 1000, 5000, 10000, 100000, 1000000]
+    results = []
+    best_solution = None
+    lowest_violations = np.inf
+
+    # each iteration on the max_steps_list
+    for max_steps in max_steps_list:
+        success_count = 0
+        total_violations = 0
+        total_steps = 0
+        total_time = 0.0
+
+        for _ in range(iterations):
+            board = [row[:] for row in board]
+
+            start_time = time.time()
+            solution, violations, steps = simulated_annealing(board, pre_colored, schedule=exp_schedule(limit=max_steps))
+            end_time = time.time()
+
+            total_violations += violations
+            total_steps += steps
+            total_time += (end_time - start_time)
+
+            if violations == 0:
+                success_count += 1
+
+            # Track best solution with the lowest violations
+            if violations < lowest_violations:
+                best_solution = [row[:] for row in solution]
+                lowest_violations = violations
+
+        # Calculate averages
+        avg_violations = total_violations / iterations
+        avg_steps = total_steps / iterations
+        avg_time = total_time / iterations
+        success_rate = (success_count / iterations) * 100
+
+        results.append((max_steps, success_rate, avg_violations, avg_steps, avg_time))
+
+    # Print Results Table
+    print("\nPerformance Analysis")
+    print(f"{'Max Steps':<12}{'Success %':<12}{'Avg Violations':<18}{'Avg Steps':<12}{'Avg Time (s)':<12}")
+    print("-" * 65)
+    for r in results:
+        print(f"{r[0]:<12}{r[1]:<12.2f}{r[2]:<18.2f}{r[3]:<12.2f}{r[4]:<12.3f}")
+    
+    # Print the best solution found
+    if best_solution:
+        print("\nBest Solution Found (Lowest Violations):")
+        printBoard(best_solution)
+        print(f"Violations: {lowest_violations}")
+
+    return
+
+
 
 # Main
 def main():
@@ -177,6 +235,10 @@ def main():
 
     # used to add violations to the board
     fill_randomly(board)
+
+    # ONLY FOR TESTING AND PERFORMANCE ANALYSIS (CONSTANT BOARD)
+    # do_test(iterations, board, pre_colored)
+    # do_test(10, board, pre_colored)
 
     print("Initial board:")
     printBoard(board)
@@ -202,4 +264,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
