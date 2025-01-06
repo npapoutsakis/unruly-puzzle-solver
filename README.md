@@ -1,8 +1,5 @@
 # Unruly Game Solver
 
-**Author:** Nikolaos Papoutsakis\
-**Student ID:** 2019030206
-
 ## Project Description
 
 This project is a Python-based solver for the Unruly logic game using a **Backtracking Algorithm**. The solver fills the empty spaces of an initial board to satisfy the following conditions:
